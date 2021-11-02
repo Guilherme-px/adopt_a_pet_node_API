@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "nodemon"
+    "start": "nodemon",
+    "lint": "eslint --fix --config .eslintrc.json \"**/*.js\""
   },
   "keywords": [],
   "author": "",

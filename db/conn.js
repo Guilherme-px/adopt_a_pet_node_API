@@ -1,10 +1,10 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 async function main() {
-    await mongoose.connect('mongodb://localhost:27017/getapet')
-    console.log('connect db')
+    await mongoose.connect('mongodb://localhost:27017/getapet');
+    console.log('connect db');
 }
 
-main().catch((err) => console.log(err))
+main().catch((err) => console.log(err));
 
-module.exports = mongoose
+module.exports = mongoose;
