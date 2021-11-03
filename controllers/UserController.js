@@ -13,7 +13,6 @@ const createUserToken = require('../helpers/create-user-token');
 module.exports = class UserController {
     static async register(req, res) {
         const userData = { ...req.body };
-        if (req.params.id) user._id = req.params.id;
 
         // validations
         try {
@@ -26,11 +25,7 @@ module.exports = class UserController {
 
             // check if user exists
             const userExists = await User.findOne({ email: userData.email });
-
-            if (!userData._id) {
-                notExistsOrError(userExists, 'Por favor, utilize outro e-mail!');
-                return;
-            }
+            notExistsOrError(userExists, 'Por favor, utilize outro e-mail!');
 
         } catch (msg) {
             return res.status(422).send(msg);
