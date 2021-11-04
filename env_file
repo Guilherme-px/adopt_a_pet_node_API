@@ -1,0 +1,10 @@
+module.exports = {
+    authSecret: '',
+    
+    mail: {
+        "host": "",
+        "port": ,
+        "user": "",
+        "pass": ""
+    }
+}
