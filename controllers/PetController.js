@@ -1,5 +1,5 @@
 const Pet = require('../models/Pet');
-const { existsOrError } = require('./validation');
+const { existsOrError } = require('../helpers/validation');
 const ObjectId = require('mongoose').Types.ObjectId;
 
 // helpers
