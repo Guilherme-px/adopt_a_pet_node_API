@@ -30,6 +30,7 @@ const Pet = mongoose.model(
         available: {
             type: Boolean,
         },
+        category: Object,
         user: Object,
         adopter: Object,
     }, { timestamps: true }),

@@ -1,18 +1,22 @@
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { authSecret } = require('../.env');
-const crypto = require('crypto');
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const { authSecret, myEmail } = require("../.env");
+const crypto = require("crypto");
 
 // models
-const User = require('../models/User');
+const User = require("../models/User");
 
 // helpers
-const getUserByToken = require('../helpers/get-user-by-token');
-const getToken = require('../helpers/get-token');
-const createUserToken = require('../helpers/create-user-token');
+const getUserByToken = require("../helpers/get-user-by-token");
+const getToken = require("../helpers/get-token");
+const createUserToken = require("../helpers/create-user-token");
 
-const { existsOrError, notExistsOrError, equalsOrError } = require('../helpers/validation');
-const mailer = require('../modules/mailer');
+const {
+    existsOrError,
+    notExistsOrError,
+    equalsOrError,
+} = require("../helpers/validation");
+const mailer = require("../modules/mailer");
 
 module.exports = class UserController {
     static async register(req, res) {
@@ -20,17 +24,23 @@ module.exports = class UserController {
 
         // validations
         try {
-            existsOrError(userData.name, 'Nome não informado!');
-            existsOrError(userData.email, 'E-mail não informado!');
-            existsOrError(userData.phone, 'Telefone não informado!');
-            existsOrError(userData.password, 'Senha não informada!');
-            existsOrError(userData.confirmPassword, 'Confirmação de Senha inválida!');
-            equalsOrError(userData.password, userData.confirmPassword, 'Senhas não conferem!');
+            existsOrError(userData.name, "Nome não informado!");
+            existsOrError(userData.phone, "Telefone não informado!");
+            existsOrError(userData.email, "E-mail não informado!");
+            existsOrError(userData.password, "Senha não informada!");
+            existsOrError(
+                userData.confirmPassword,
+                "Confirmação de Senha inválida!"
+            );
+            equalsOrError(
+                userData.password,
+                userData.confirmPassword,
+                "Senhas não conferem!"
+            );
 
             // check if user exists
             const userExists = await User.findOne({ email: userData.email });
-            notExistsOrError(userExists, 'Por favor, utilize outro e-mail!');
-
+            notExistsOrError(userExists, "Por favor, utilize outro e-mail!");
         } catch (msg) {
             return res.status(422).send(msg);
         }
@@ -51,8 +61,8 @@ module.exports = class UserController {
             const newUser = await user.save();
 
             await createUserToken(newUser, req, res);
-        } catch (error) {
-            res.status(500).json({ msg: error });
+        } catch (msg) {
+            res.status(500).send(msg);
         }
     }
 
@@ -61,12 +71,12 @@ module.exports = class UserController {
         const password = req.body.password;
 
         if (!email) {
-            res.status(422).send('O e-mail é obrigatório!');
+            res.status(422).send("O e-mail é obrigatório!");
             return;
         }
 
         if (!password) {
-            res.status(422).send('A senha é obrigatória!');
+            res.status(422).send("A senha é obrigatória!");
             return;
         }
 
@@ -76,14 +86,14 @@ module.exports = class UserController {
         if (!user) {
             return res
                 .status(422)
-                .send('Não há usuário cadastrado com este e-mail!');
+                .send("Não há usuário cadastrado com este e-mail!");
         }
 
         // check if password match
         const checkPassword = await bcrypt.compare(password, user.password);
 
         if (!checkPassword) {
-            return res.status(422).send('Senha inválida!');
+            return res.status(422).send("Senha inválida!");
         }
 
         await createUserToken(user, req, res);
@@ -112,7 +122,7 @@ module.exports = class UserController {
         const user = await User.findById(id);
 
         if (!user) {
-            res.status(422).send('Usuário não encontrado!');
+            res.status(422).send({ msg: "Usuário não encontrado!" });
             return;
         }
 
@@ -126,7 +136,7 @@ module.exports = class UserController {
 
         const userData = { ...req.body };
 
-        let image = '';
+        let image = "";
 
         if (req.file) {
             user.image = req.file.filename;
@@ -134,27 +144,32 @@ module.exports = class UserController {
 
         // validations
         try {
-            existsOrError(userData.name, 'Nome não informado!');
+            existsOrError(userData.name, "Nome não informado!");
             user.name = userData.name;
 
-            existsOrError(userData.email, 'E-mail não informado!');
+            existsOrError(userData.email, "E-mail não informado!");
             const userExists = await User.findOne({ email: userData.email });
 
             if (user.email !== userData.email && userExists) {
-                res.status(422).send('Por favor, utilize outro e-mail!');
+                res.status(422).send("Por favor, utilize outro e-mail!");
                 return;
             }
 
             user.email = userData.email;
 
-            existsOrError(userData.phone, 'Telefone não informado!');
+            existsOrError(userData.phone, "Telefone não informado!");
             user.phone = userData.phone;
 
-            existsOrError(userData.password, 'Senha não informada!');
-            equalsOrError(userData.password, userData.confirmPassword, 'Senhas não conferem');
+            equalsOrError(
+                userData.password,
+                userData.confirmPassword,
+                "Senhas não conferem"
+            );
 
-            if (userData.password === userData.confirmPassword && userData.password != null) {
-
+            if (
+                userData.password === userData.confirmPassword &&
+                userData.password != null
+            ) {
                 const salt = await bcrypt.genSalt(12);
                 const passwordHash = await bcrypt.hash(userData.password, salt);
 
@@ -162,7 +177,6 @@ module.exports = class UserController {
             }
 
             try {
-
                 // returns user updated data
                 await User.findOneAndUpdate(
                     { _id: user._id },
@@ -170,91 +184,92 @@ module.exports = class UserController {
                     { new: true }
                 );
 
-                res.status(200).send('Usuário atualizado com sucesso!');
-
-            } catch (err) {
-                res.status(500).json({ msg: err });
+                res.status(200).send("Usuário atualizado com sucesso!");
+            } catch (msg) {
+                res.status(500).send(msg);
                 return;
             }
 
             // check if user exists
-
         } catch (msg) {
             return res.status(422).send(msg);
         }
     }
 
     static async forgotPassword(req, res) {
-
         const { email } = req.body;
 
         try {
-
             const user = await User.findOne({ email });
 
             if (!user) {
                 return res
                     .status(422)
-                    .send('Não há usuário cadastrado com este e-mail!');
+                    .send("Não há usuário cadastrado com este e-mail!");
             }
 
             // create token with crypto
-            const token = crypto.randomBytes(20).toString('hex');
+            const token = crypto.randomBytes(20).toString("hex");
 
             // expires token
             const now = new Date();
             now.setHours(now.getHours() + 1);
 
             await User.findByIdAndUpdate(user.id, {
-                '$set': {
+                $set: {
                     passwordResetToken: token,
-                    passwordResetExpires: now
-                }
+                    passwordResetExpires: now,
+                },
             });
 
             const userId = user._id;
 
-            mailer.sendMail({
-                to: email,
-                from: 'guilherme.s.goncalves@outlook.com',
-                template: 'auth/forgot_password',
-                context: { token, userId }
-            }, (err) => {
-                if (err) return res.status(400).send('Cannot send forgot password email');
+            mailer.sendMail(
+                {
+                    to: email,
+                    from: myEmail,
+                    template: "auth/forgot_password",
+                    context: { token, userId },
+                },
+                (err) => {
+                    if (err)
+                        return res
+                            .status(400)
+                            .send("Cannot send forgot password email");
 
-                return res.send('E-mail enviado!');
-            });
-
+                    return res.send("E-mail enviado!");
+                }
+            );
         } catch (msg) {
             return res.status(422).send(msg);
         }
     }
 
     static async resetPassword(req, res) {
-
         const { id, token } = req.params;
         const { password, confirmPassword } = req.body;
 
         try {
-
-            existsOrError(password, 'Senha não informada!');
-            existsOrError(confirmPassword, 'Confirmação de Senha inválida!');
-            equalsOrError(password, confirmPassword, 'Senhas não conferem!');
+            existsOrError(password, "Senha não informada!");
+            existsOrError(confirmPassword, "Confirmação de Senha inválida!");
+            equalsOrError(password, confirmPassword, "Senhas não conferem!");
 
             // check if user exists
-            const user = await User.findById({ _id: id })
-                .select('+passwordResetToken passwordResetExpires');
-            notExistsOrError(!user, 'Usuário não encontrado!');
-
+            const user = await User.findById({ _id: id }).select(
+                "+passwordResetToken passwordResetExpires"
+            );
+            notExistsOrError(!user, "Usuário não encontrado!");
 
             if (token !== user.passwordResetToken) {
-                return res.status(400).send('Token inválido');
+                return res.status(400).send("Token inválido");
             }
 
             const now = new Date();
 
             if (now > user.passwordResetExpires) {
-                return res.status(400).send('Token expirou!, gere um novo token');
+                return res
+                    .status(400)
+                    .send("Token expirou!, gere um novo token");
             }
 
             // create password
@@ -265,8 +280,7 @@ module.exports = class UserController {
 
             await user.save();
 
-            res.send('Nova senha salva com sucesso!');
-
+            res.send("Nova senha salva com sucesso!");
         } catch (msg) {
             console.log(msg);
             return res.status(422).send(msg);
